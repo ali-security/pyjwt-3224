@@ -1,107 +1,106 @@
----
 name: CI
 
 on:
   push:
-    branches: ["master"]
+    branches: [master, main]
   pull_request:
-    branches: ["master"]
+    branches: [master, main]
   workflow_dispatch:
 
 jobs:
   tests:
-    name: "Python ${{ matrix.python-version }} on ${{ matrix.platform }}"
-    runs-on: "${{ matrix.platform }}"
+    name: Python ${{ matrix.python-version }} on ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}
     env:
       USING_COVERAGE: '3.9'
 
     strategy:
       fail-fast: false
       matrix:
-        platform: ["ubuntu-latest", "windows-latest"]
+        platform: [ubuntu-24.04, windows-2025]
         python-version:
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
-          - "3.13"
-          - "3.14"
-          - "pypy3.9"
-          - "pypy3.10"
-          - "pypy3.11"
+          - '3.9'
+          - '3.10'
+          - '3.11'
+          - '3.12'
+          - '3.13'
+          - '3.14'
+          - pypy3.9
+          - pypy3.10
+          - pypy3.11
 
     steps:
-      - uses: "actions/checkout@v6"
-      - uses: "actions/setup-python@v6"
+      - uses: actions/checkout@v6
+      - uses: MatteoH2O1999/setup-python@v4
 
         with:
-          python-version: "${{ matrix.python-version }}"
+          python-version: ${{ matrix.python-version }}
           allow-prereleases: true
 
-      - name: "Install dependencies"
+      - name: Install dependencies
         run: |
           python -VV
           python -m site
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install --upgrade coverage[toml] virtualenv tox tox-gh-actions
 
-      - name: "Run tox targets for ${{ matrix.python-version }}"
-        run: "python -m tox"
+      - name: Run tox targets for ${{ matrix.python-version }}
+        run: python -m tox
 
       # We always use a modern Python version for combining coverage to prevent
       # parsing errors in older versions for modern code.
-      - uses: "actions/setup-python@v6"
+      - uses: MatteoH2O1999/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: '3.9'
 
-      - name: "Combine coverage"
+      - name: Combine coverage
         run: |
           set -xe
           python -m pip install coverage[toml]
           python -m coverage combine
           python -m coverage xml
-        if: "contains(env.USING_COVERAGE, matrix.python-version) && matrix.platform == 'ubuntu-latest'"
+        if: contains(env.USING_COVERAGE, matrix.python-version) && matrix.platform == 'ubuntu-24.04'
 
   package:
-    name: "Build & verify package"
-    runs-on: "ubuntu-latest"
+    name: Build & verify package
+    runs-on: ubuntu-24.04
 
     steps:
-      - uses: "actions/checkout@v6"
-      - uses: "actions/setup-python@v6"
+      - uses: actions/checkout@v6
+      - uses: MatteoH2O1999/setup-python@v4
 
         with:
-          python-version: "3.9"
+          python-version: '3.9'
 
-      - name: "Install build and twine"
-        run: "python -m pip install build twine"
+      - name: Install build and twine
+        run: python -m pip install build twine
 
-      - name: "Build package"
-        run: "python -m build"
+      - name: Build package
+        run: python -m build
 
-      - name: "List result"
-        run: "ls -l dist"
+      - name: List result
+        run: ls -l dist
 
-      - name: "Check long_description"
-        run: "python -m twine check dist/*"
+      - name: Check long_description
+        run: python -m twine check dist/*
 
   install-dev:
     strategy:
       matrix:
-        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        os: [ubuntu-24.04, windows-2025, macos-15]
 
-    name: "Verify dev env"
-    runs-on: "${{ matrix.os }}"
+    name: Verify dev env
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: "actions/checkout@v6"
-      - uses: "actions/setup-python@v6"
+      - uses: actions/checkout@v6
+      - uses: MatteoH2O1999/setup-python@v4
 
         with:
-          python-version: "3.9"
+          python-version: '3.9'
 
-      - name: "Install in dev mode"
-        run: "python -m pip install -e .[dev]"
+      - name: Install in dev mode
+        run: python -m pip install -e .[dev]
 
-      - name: "Import package"
-        run: "python -c 'import jwt; print(jwt.__version__)'"
+      - name: Import package
+        run: python -c 'import jwt; print(jwt.__version__)'

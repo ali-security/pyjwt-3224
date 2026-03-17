@@ -1,4 +1,4 @@
-name: "Update unreleased section in CHANGELOG"
+name: Update unreleased section in CHANGELOG
 on:
   pull_request:
     # By default labeled/unlabeled are not included in the pull_request even so we need to list out what we want
@@ -9,10 +9,10 @@ permissions:
 
 jobs:
   changelog:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: dangoslen/changelog-enforcer@204e7d3ef26579f4cd0fd759c57032656fdf23c7 # v3.6.1
       with:
-        skipLabels: 'Skip-Changelog,dependencies,tests'
+        skipLabels: Skip-Changelog,dependencies,tests
         versionPattern: ^`(v\\d?\\.\\d?\\.\\d|Unreleased) <\\S+>`__
         changeLogPath: CHANGELOG.rst
